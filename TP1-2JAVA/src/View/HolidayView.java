@@ -5,12 +5,11 @@ import Model.Employee;
 import Model.Holiday;
 
 import java.awt.*;
-import java.awt.event.ActionListener;
 import java.time.LocalDate;
 import java.util.List;
 public class HolidayView extends JFrame{
-    private JComboBox<String> type,dateDebut,dateFin,nom;
-    public JButton ajouter, supprimer,modifier,Employes,Conges;
+    public JComboBox<String> type,dateDebut,dateFin,nom;
+    public JButton ajouter, supprimer,modifier,Employes,Conges,refrecher,importer,exporter;
     public JTable JT;
     public DefaultTableModel tableModel;
     private JPanel p0,p1,p2,p3,p4,p5;   
@@ -20,11 +19,13 @@ public class HolidayView extends JFrame{
 
         setTitle("Gestion des Employés et Congés");
         setSize(600, 400);
+        this.setBounds(350, 100, 600,400);
         setLayout(new BorderLayout());
         
         p1 = new JPanel(new FlowLayout());
         Employes = new JButton("Employes");
         Conges = new JButton("Conges");
+        Conges.setBackground(Color.BLUE);
         p1.add(Employes);
         p1.add(Conges);
         
@@ -52,9 +53,16 @@ public class HolidayView extends JFrame{
         ajouter= new JButton("Ajouter");
         supprimer = new JButton("Suprimer");
         modifier= new JButton("Modifier");
+        refrecher= new JButton("Refrecher");
+        importer= new JButton("Importer");
+        exporter= new JButton("Exporter");
+        
         p5.add(ajouter);
         p5.add(supprimer);
         p5.add(modifier);
+        p5.add(refrecher);
+        p5.add(importer);
+        p5.add(exporter);
         
         
         p4=new JPanel(new BorderLayout());

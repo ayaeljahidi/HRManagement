@@ -7,15 +7,20 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
+import Main.MainEMployee;
+import Model.Employee;
 import Model.Holiday;
 import Model.HolidayModel;
+import Model.HolidayImpoExpo;
 
 public class HolidayController {
 	private HolidayView view;
 	private HolidayModel model;
-	
+	private HolidayImpoExpo impexp = new HolidayImpoExpo();
 	public HolidayController(HolidayView view ,HolidayModel model) {
 		this.view=view;
 		this.model=model;
@@ -26,6 +31,81 @@ public class HolidayController {
 		this.view.ajouter.addActionListener(e->ajouter());
 		this.view.supprimer.addActionListener(e->drop());
 		this.view.modifier.addActionListener(e->modifier());
+		this.view.Employes.addActionListener(e->back());
+		this.view.JT.getSelectionModel().addListSelectionListener(e->fillOutFields());
+		this.view.refrecher.addActionListener(e->refrecher());
+		this.view.importer.addActionListener(e->handleImport());
+		this.view.exporter.addActionListener(e->handleExport());
+	}
+	
+
+	private void handleImport() {
+	    JFileChooser fileChooser = new JFileChooser();
+	    fileChooser.setFileFilter(new FileNameExtensionFilter("Fichiers CSV", "csv"));
+
+	    if (fileChooser.showOpenDialog(view) == JFileChooser.APPROVE_OPTION) {
+	        try {
+	            String filePath = fileChooser.getSelectedFile().getAbsolutePath();
+	            impexp.importData(filePath);
+	            view.afficherMessageSuccess("Importation réussie !");
+	        } catch (Exception ex) {
+	            view.afficherMessageError("Erreur lors de l'importation : " + ex.getMessage());
+	        }
+	    }
+	}
+
+	private void handleExport() {
+	    JFileChooser fileChooser = new JFileChooser();
+	    fileChooser.setFileFilter(new FileNameExtensionFilter("Fichiers CSV", "csv"));
+
+	    if (fileChooser.showSaveDialog(view) == JFileChooser.APPROVE_OPTION) {
+	        try {
+	            String filePath = fileChooser.getSelectedFile().getAbsolutePath();
+	            if (!filePath.toLowerCase().endsWith(".csv")) {
+	                filePath += ".csv";
+	            }
+	            List<Holiday> employees = model.afficher();
+	            impexp.exportData(filePath, employees);
+	            view.afficherMessageSuccess("Exportation réussie !");
+	        } catch (Exception ex) {
+	            view.afficherMessageError("Erreur lors de l'exportation : " + ex.getMessage());
+	        }
+	    }
+	}
+	
+	public void refrecher() {
+		view.nom.setEnabled(true);
+		 view.nom.setSelectedItem(null);
+         view.type.setSelectedItem(null);
+         view.dateDebut.setSelectedItem(null);
+         view.dateFin.setSelectedItem(null);
+	}
+	public void fillOutFields() {
+	    int row = view.JT.getSelectedRow();
+	    if (row != -1) {
+	        try {
+	            String nom = view.tableModel.getValueAt(row, 1).toString();
+	            String dateDebut = view.tableModel.getValueAt(row, 2).toString();
+	            String dateFin = view.tableModel.getValueAt(row, 3).toString();
+	            String type = view.tableModel.getValueAt(row, 4).toString();
+
+	            LocalDate debut = LocalDate.parse(dateDebut);
+	            LocalDate fin = LocalDate.parse(dateFin);
+
+	            view.nom.setSelectedItem(nom);
+	    		view.nom.setEnabled(false);
+	            view.type.setSelectedItem(type);
+	            view.dateDebut.setSelectedItem(debut.toString());
+	            view.dateFin.setSelectedItem(fin.toString());
+	        } catch (Exception e) {
+	            view.afficherMessageError("Erreur lors du remplissage des champs : " + e.getMessage());
+	        }
+	    }
+	}
+
+	private void back() {
+        view.dispose();
+        MainEMployee.start(); 
 	}
 	
 
@@ -67,7 +147,6 @@ public class HolidayController {
               view.afficherMessageError("Solde insuffisant, votre solde est : " + model.getSolde(nom));
               return;
           }
-		
 		boolean succes= model.ajouter(dateDebut,dateFin,Holiday.Type.valueOf(type),nom);
 		if(succes) {
 			view.afficherMessageSuccess("Holiday ajouter");
@@ -154,63 +233,84 @@ public class HolidayController {
 	
 	 
 	private void modifier() {
-		 view.JT.addMouseListener(new MouseAdapter() {
-	         @Override
-	         public void mouseClicked(MouseEvent e) {
-	        	 String nom= view.getNom();
-	     		String dateDebut = view.getDateDebut();
-	     		String dateFin= view.getDateFin();
-	     		String type = view.getSelectedType();
-	     		int solde = view.getSolde();
-	     		if(nom.isEmpty() || dateDebut.isEmpty() || dateFin.isEmpty() || type == null) {
-	     			view.afficherMessageError("Tous les champs doivent être remplis.");
-	     			return;
-	     		}
-	        	   int row = view.JT.getSelectedRow(); 
-	               if (row != -1) { 
-	                   int Id = (int) view.tableModel.getValueAt(row, 0); 
-	                   String nomT = (String) view.tableModel.getValueAt(row, 1);
-		                 String dateDebutT = (String) view.tableModel.getValueAt(row, 2);
-		                 String dateFinT = (String) view.tableModel.getValueAt(row, 3);
-		                 LocalDate debut = LocalDate.parse(dateDebutT);
-		                 LocalDate fin = LocalDate.parse(dateFinT);
-		                 int soldeT= (int) java.time.temporal.ChronoUnit.DAYS.between(debut, fin);
-	                   int reponse = JOptionPane.showConfirmDialog(null, 
-	                           "Êtes-vous sûr de vouloir modifier ce congé ?", 
-	                           "Confirmation", 
-	                           JOptionPane.YES_NO_OPTION);
-	                   if(reponse  == JOptionPane.YES_OPTION) {
-	               		boolean succes= model.modifier(Id,dateDebut,dateFin,Holiday.Type.valueOf(type),nom);
-	               		model.updateSolde(nomT,model.getSolde(nomT)+soldeT);
-	               		model.updateSolde(nom,model.getSolde(nom)-solde);
-	   	        		view.clearFields();
-	   	        	 List<Holiday> updatedHolidays = model.afficher(); // Récupérer les congés mis à jour
-                     
-                     // Convertir la liste en tableau d'objets pour le tableau
-                     Object[][] data = new Object[updatedHolidays.size()][5]; // 5 colonnes pour id, date_debut, date_fin, type, nom
 
-                     for (int i = 0; i < updatedHolidays.size(); i++) {
-                         Holiday holiday = updatedHolidays.get(i);
-                         data[i][0] = holiday.getId();
-                         data[i][1] = holiday.getDateDebut();
-                         data[i][2] = holiday.getDateFin();
-                         data[i][3] = holiday.getType();
-                         data[i][4] = holiday.getNom();
-                     }
+	    // Ajout d'un ActionListener au bouton "Modifier"
+	    view.modifier.addActionListener(e -> {
+	        try {
+	            // Récupérer les informations depuis les champs remplis
+	            String nom = view.getNom();
+	            String dateDebut = view.getDateDebut();
+	            String dateFin = view.getDateFin();
+	            String type = view.getSelectedType();
 
-                     // Mettre à jour le tableau avec les données actualisées
-                     view.updateTable(data);
+	            // Vérification des champs
+	            if (nom == null || nom.isEmpty() || dateDebut == null || dateDebut.isEmpty() 
+	                || dateFin == null || dateFin.isEmpty() || type == null) {
+	                view.afficherMessageError("Tous les champs doivent être remplis.");
+	                return;
+	            }
+	            
+	            // Calcul du solde
+	            int solde = view.getSolde();
 
-	                	  if(succes) {
-	                          view.afficherMessageSuccess("congé modifier avec succès.");
-	                	  }
-	                   }
-	                   
-	        	 
-	               } }
-		 });
-		 
-	 }
-	 
+	            // Vérification de la sélection dans la table
+	            int row = view.JT.getSelectedRow();
+	            if (row == -1) {
+	                view.afficherMessageError("Veuillez sélectionner un congé à modifier.");
+	                return;
+	            }
+
+	            // Récupération de l'ID du congé à partir de la table
+	            int id = (int) view.tableModel.getValueAt(row, 0);
+	            String ancienNom = (String) view.tableModel.getValueAt(row, 1);
+	            String ancienneDateDebut = (String) view.tableModel.getValueAt(row, 2);
+	            String ancienneDateFin = (String) view.tableModel.getValueAt(row, 3);
+	            
+	            // Calcul de l'ancien solde
+	            LocalDate ancienneDebut = LocalDate.parse(ancienneDateDebut);
+	            LocalDate ancienneFin = LocalDate.parse(ancienneDateFin);
+	            int ancienSolde = (int) java.time.temporal.ChronoUnit.DAYS.between(ancienneDebut, ancienneFin);
+
+	            // Confirmation de modification
+	            int reponse = JOptionPane.showConfirmDialog(null, 
+	                    "Êtes-vous sûr de vouloir modifier ce congé ?", 
+	                    "Confirmation", 
+	                    JOptionPane.YES_NO_OPTION);
+	            if (reponse == JOptionPane.YES_OPTION) {
+	                // Appel au modèle pour modifier les données
+	                boolean succes = model.modifier(id, dateDebut, dateFin, Holiday.Type.valueOf(type), ancienNom);
+
+	                // Mise à jour des soldes
+	                model.updateSolde(ancienNom, model.getSolde(ancienNom) + ancienSolde);
+	                model.updateSolde(ancienNom, model.getSolde(nom) - solde);
+
+	                // Rafraîchissement de la table
+	                List<Holiday> updatedHolidays = model.afficher();
+	                Object[][] data = new Object[updatedHolidays.size()][5];
+
+	                for (int i = 0; i < updatedHolidays.size(); i++) {
+	                    Holiday holiday = updatedHolidays.get(i);
+	                    data[i][0] = holiday.getId();
+	                    data[i][1] = holiday.getNom();
+	                    data[i][2] = holiday.getDateDebut();
+	                    data[i][3] = holiday.getDateFin();
+	                    data[i][4] = holiday.getType();
+	                }
+	                view.updateTable(data);
+
+	                if (succes) {
+	                    view.afficherMessageSuccess("Congé modifié avec succès.");
+	                } else {
+	                    view.afficherMessageError("Échec de la modification du congé.");
+	                }
+
+	                // Réinitialisation des champs
+	                view.clearFields();
+	            }
+	        } catch (Exception ex) {
+	            view.afficherMessageError("Erreur lors de la modification : " + ex.getMessage());
+	        }
+	    });}
+
 
 }

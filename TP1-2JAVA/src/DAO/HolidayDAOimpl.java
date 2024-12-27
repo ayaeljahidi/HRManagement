@@ -27,6 +27,24 @@ public class HolidayDAOimpl implements GenericDAOI<Holiday> {
             e.printStackTrace();
         }
     }
+    
+    public boolean exists(String dateDebut, String dateFin, String nom) {
+        String query = "SELECT COUNT(*) FROM Holiday WHERE date_debut = ? AND date_fin = ?AND nom = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setDate(1, java.sql.Date.valueOf(dateDebut));
+            stmt.setDate(2, java.sql.Date.valueOf(dateFin));
+            stmt.setString(3, nom);
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0; // Retourne true si une ligne existe
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false; // Par défaut, aucune ligne n'existe
+    }
+
 
     @Override
     public void modifier(int id, Holiday holiday) {

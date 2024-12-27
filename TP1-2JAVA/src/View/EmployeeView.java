@@ -7,7 +7,7 @@ import Model.Employee;
 public class EmployeeView extends JFrame {
     private JComboBox<String> poste,role;
     private JTextField nom, prenom, email, telephone, salaire;
-    public JButton ajouter, supprimer, afficher, modifier;
+    public JButton ajouter, supprimer, afficher, modifier,employee,conge,importer,exporter;
     public JTable JT;
     private String[] s1,s2;
     
@@ -19,8 +19,16 @@ public class EmployeeView extends JFrame {
 
         setTitle("Gestion des Employés");
         setSize(800, 600);
+        this.setBounds(350, 100, 800,600);
         setLayout(new BorderLayout());
-
+        
+        JPanel p1= new JPanel(new FlowLayout());
+        employee = new JButton("Employes");
+        conge= new JButton("Conges");
+        employee.setBackground(Color.BLUE);
+        p1.add(employee);
+        p1.add(conge);
+        
         JPanel panelForm = new JPanel(new GridLayout(7, 2, 10, 10));
 
         panelForm.add(new JLabel("Nom:"));
@@ -50,8 +58,11 @@ public class EmployeeView extends JFrame {
         panelForm.add(new JLabel("Rôle:"));
         role = new JComboBox<>(s2);
         panelForm.add(role);
-
-        add(panelForm, BorderLayout.NORTH);
+        
+        JPanel p2 = new JPanel(new BorderLayout());
+        p2.add(p1,BorderLayout.NORTH);
+        p2.add(panelForm,BorderLayout.CENTER);
+        add(p2, BorderLayout.NORTH);
 
         // Boutons d'action
         JPanel panelBoutons = new JPanel(new FlowLayout());
@@ -67,6 +78,12 @@ public class EmployeeView extends JFrame {
 
         modifier = new JButton("Modifier");
         panelBoutons.add(modifier);
+        
+        importer = new JButton("Importer");
+        panelBoutons.add(importer);
+        exporter = new JButton("Exporter");
+        panelBoutons.add(exporter);
+        
 
         add(panelBoutons, BorderLayout.SOUTH);
 

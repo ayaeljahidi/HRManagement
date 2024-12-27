@@ -4,15 +4,19 @@ import View.EmployeeView;
 import java.awt.event.*;
 import java.util.List;
 
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
+import Main.MainHoliday;
 import Model.Employee;
 import Model.EmployeeModel;
+import Model.ImportExportModel;
 
 public class EmployeeController {
 	private EmployeeView view;
 	private EmployeeModel model;
-	
+    private ImportExportModel impexp = new ImportExportModel(); // Initialise impexp directement
 	public EmployeeController(EmployeeView view ,EmployeeModel model) {
 		this.view=view;
 		this.model=model;
@@ -20,7 +24,55 @@ public class EmployeeController {
 		this.view.afficher.addActionListener(e->afficher());
 		this.view.supprimer.addActionListener(e->drop());
 		this.view.modifier.addActionListener(e->modifier());
+		this.view.conge.addActionListener(e->back());
+		this.view.importer.addActionListener(e->handleImport());
+		this.view.exporter.addActionListener(e->handleExport());
 	}
+	
+	
+	
+	private void handleImport() {
+	    JFileChooser fileChooser = new JFileChooser();
+	    fileChooser.setFileFilter(new FileNameExtensionFilter("Fichiers CSV", "csv"));
+
+	    if (fileChooser.showOpenDialog(view) == JFileChooser.APPROVE_OPTION) {
+	        try {
+	            String filePath = fileChooser.getSelectedFile().getAbsolutePath();
+	            impexp.importData(filePath);
+	            view.afficherMessageSuccess("Importation réussie !");
+	        } catch (Exception ex) {
+	            view.afficherMessageError("Erreur lors de l'importation : " + ex.getMessage());
+	        }
+	    }
+	}
+
+	private void handleExport() {
+	    JFileChooser fileChooser = new JFileChooser();
+	    fileChooser.setFileFilter(new FileNameExtensionFilter("Fichiers CSV", "csv"));
+
+	    if (fileChooser.showSaveDialog(view) == JFileChooser.APPROVE_OPTION) {
+	        try {
+	            String filePath = fileChooser.getSelectedFile().getAbsolutePath();
+	            if (!filePath.toLowerCase().endsWith(".csv")) {
+	                filePath += ".csv";
+	            }
+	            List<Employee> employees = model.afficher();
+	            impexp.exportData(filePath, employees);
+	            view.afficherMessageSuccess("Exportation réussie !");
+	        } catch (Exception ex) {
+	            view.afficherMessageError("Erreur lors de l'exportation : " + ex.getMessage());
+	        }
+	    }
+	}
+	
+	
+	
+	
+	public void back() {
+        view.dispose();
+		MainHoliday.start();
+	}
+	
 	
 	public void ajouter() {
 		try {

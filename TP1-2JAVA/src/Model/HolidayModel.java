@@ -20,6 +20,7 @@ public class HolidayModel {
 	            System.out.println("La date de début doit être avant la date de fin.");
 	            return false;
 	        }
+	  
 	    } catch (IllegalArgumentException e) {
 	        System.out.println("Les dates doivent être au format 'yyyy-MM-dd'.");
 	        return false;
@@ -63,6 +64,10 @@ public class HolidayModel {
 		return true;
 	}
 	
+	public boolean existe(String dateDebut, String dateFin,String nom) {
+		dao.exists(dateDebut, dateFin, nom);
+		return true;
+	}
 	
 	 public List<Employee> getEmployesName()
 	 {

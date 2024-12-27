@@ -6,8 +6,9 @@ import java.util.List;
 public class EmployeeDAOimpl implements GenericDAOI<Employee>{
 	private Connection conn;
 	public EmployeeDAOimpl() {
-		this.conn=DBConnection.getConnection();
-	}
+		    conn = DBConnection.getConnection();
+		}
+	
 	
 	@Override
 	public void ajouter(Employee employe) {
